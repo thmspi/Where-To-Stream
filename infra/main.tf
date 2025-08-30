@@ -1,7 +1,6 @@
 // Configuration and Provider Blocks
 
 terraform {
-  required_version = "~>1.12.2"
 
   backend "remote" {
     organization = "Who-Stream-It"
@@ -14,6 +13,10 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.50"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4"
     }
   }
 }
@@ -30,7 +33,9 @@ provider "aws" {
 locals {
   bucket_name     = "${var.project}-site-${random_id.rand.hex}"
   lambda_name     = "${var.project}-lambda"
-  lambda_zip_path = "${path.module}/../build/lambda.zip"  # built by GitHub Actions before tf apply
+  rendered_index = templatefile("${path.module}/../web/index.html.tftpl", {
+    function_url = aws_lambda_function_url.api.function_url
+  })
 }
 
 
@@ -60,12 +65,10 @@ data "aws_iam_policy_document" "lambda_assume" {
   }
 }
 
-# --- Website asset (index.html rendered with the Function URL) ---
-data "template_file" "index" {
-  template = file("${path.module}/../web/index.html.tftpl")
-  vars = {
-    function_url = aws_lambda_function_url.api.function_url
-  }
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/index.mjs"
+  output_path = "${path.module}/../build/lambda.zip"
 }
 
 
@@ -124,8 +127,8 @@ resource "aws_lambda_function" "api" {
   role          = aws_iam_role.lambda.arn
   runtime       = "nodejs18.x"
   handler       = "index.handler"
-  filename      = local.lambda_zip_path
-  source_code_hash = filebase64sha256(local.lambda_zip_path)
+  filename         = data.archive_file.lambda_zip.output_path
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   environment {
     variables = merge(var.lambda_env, {
@@ -152,8 +155,8 @@ resource "aws_lambda_function_url" "api" {
 resource "aws_s3_object" "index" {
   bucket       = aws_s3_bucket.site.id
   key          = "index.html"
-  content      = data.template_file.index.rendered
+  content      = local.rendered_index
   content_type = "text/html; charset=utf-8"
-  etag         = md5(data.template_file.index.rendered)
+  etag         = md5(local.rendered_index)
 }
 
