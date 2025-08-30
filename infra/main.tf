@@ -31,8 +31,8 @@ provider "aws" {
 // Locals Block
 
 locals {
-  bucket_name     = "${var.project}-site-${random_id.rand.hex}"
-  lambda_name     = "${var.project}-lambda"
+  bucket_name = "${var.project}-site-${random_id.rand.hex}"
+  lambda_name = "${var.project}-lambda"
   rendered_index = templatefile("${path.module}/web/index.html.tftpl", {
     function_url = aws_lambda_function_url.api.function_url
   })
@@ -123,10 +123,10 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 
 # --- Lambda function (Node 18) ---
 resource "aws_lambda_function" "api" {
-  function_name = local.lambda_name
-  role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs18.x"
-  handler       = "index.handler"
+  function_name    = local.lambda_name
+  role             = aws_iam_role.lambda.arn
+  runtime          = "nodejs18.x"
+  handler          = "index.handler"
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
