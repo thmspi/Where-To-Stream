@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Who Streams It?</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    form { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    input, button, label { font-size: 1rem; padding: .6rem .8rem; }
+    #out { margin-top: 1rem; }
+    ul { line-height: 1.7; padding-left: 1rem; }
+    .pill { font-size: .8rem; padding: .1rem .4rem; border: 1px solid #ccc; border-radius: .4rem; margin-left: .4rem; }
+  </style>
+
+  <h1>Who Streams It?</h1>
+  <form id="f">
+    <input id="q" size="28" placeholder="Title (e.g., Dune)" required>
+    <input id="countries" size="28" placeholder="Countries CSV (e.g., FR,US,DE)" value="FR,US,DE,GB">
+    <label><input type="checkbox" id="strict"> streaming only (no ad/free)</label>
+    <button>Search</button>
+  </form>
+
+  <div id="out"></div>
+
+  <script>
+    const FN = "${function_url}";
+    const regionNames = new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' });
+
+    const f = document.getElementById('f');
+    const q = document.getElementById('q');
+    const c = document.getElementById('countries');
+    const strict = document.getElementById('strict');
+    const out = document.getElementById('out');
+
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      out.textContent = 'Loading…';
+
+      const u = new URL(FN);
+      u.searchParams.set('title', q.value.trim());
+      if (c.value.trim()) u.searchParams.set('countries', c.value.trim());
+      u.searchParams.set('include', strict.checked ? 'strict' : 'plus');
+
+      try {
+        const r = await fetch(u);
+        const data = await r.json();
+        out.innerHTML = '';
+
+        const header = document.createElement('div');
+        header.innerHTML = `<p><strong>${data?.info?.label || q.value.trim()}</strong> <span class="pill">${data?.mode || ''}</span></p>`;
+        out.appendChild(header);
+
+        const list = document.createElement('ul');
+        if (!data?.entries?.length) {
+          list.innerHTML = '<li>No streaming providers found for the selected countries.</li>';
+        } else {
+          for (const e of data.entries) {
+            const countryName = regionNames.of(e.country) || e.country;
+            const badge = e.offer_type === 'flatrate' ? '' : ` <span class="pill">${e.offer_type}</span>`;
+            const li = document.createElement('li');
+            li.textContent = `${e.provider} (${countryName})`;
+            li.insertAdjacentHTML('beforeend', badge);
+            list.appendChild(li);
+          }
+        }
+        out.appendChild(list);
+      } catch (err) {
+        out.textContent = 'Error: ' + err;
+      }
+    });
+  </script>
+</html>
