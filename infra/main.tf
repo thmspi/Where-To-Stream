@@ -33,7 +33,7 @@ provider "aws" {
 locals {
   bucket_name     = "${var.project}-site-${random_id.rand.hex}"
   lambda_name     = "${var.project}-lambda"
-  rendered_index = templatefile("${path.module}/../web/index.html.tftpl", {
+  rendered_index = templatefile("${path.module}/web/index.html.tftpl", {
     function_url = aws_lambda_function_url.api.function_url
   })
 }
@@ -67,8 +67,8 @@ data "aws_iam_policy_document" "lambda_assume" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambda/index.mjs"
-  output_path = "${path.module}/../build/lambda.zip"
+  source_file = "${path.module}/lambda/index.mjs"
+  output_path = "${path.module}/build/lambda.zip"
 }
 
 
