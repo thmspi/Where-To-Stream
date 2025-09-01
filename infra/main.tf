@@ -36,6 +36,7 @@ locals {
   rendered_index = templatefile("${path.module}/web/index.html.tftpl", {
     function_url = aws_lambda_function_url.api.function_url
   })
+  static_files = fileset("${path.module}/web", ["**"])
 }
 
 
@@ -67,8 +68,15 @@ data "aws_iam_policy_document" "lambda_assume" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = "${path.module}/lambda/index.mjs"
-  output_path = "${path.module}/build/lambda.zip"
+  source_file = "${path.module}/lambda/watch.mjs"
+  output_path = "${path.module}/build/watch.zip"
+}
+
+# Archive for search Lambda
+data "archive_file" "search_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambda/search.mjs"
+  output_path = "${path.module}/build/search.zip"
 }
 
 
@@ -93,6 +101,33 @@ resource "aws_s3_bucket_website_configuration" "site" {
     key = "index.html"
   }
 }
+
+resource "aws_s3_object" "assets" {
+  for_each     = { for f in local.static_files : f => f }
+  bucket       = aws_s3_bucket.site.id
+  key          = each.value
+  source       = "${path.module}/web/${each.value}"
+  etag         = filemd5("${path.module}/web/${each.value}")
+  content_type = lookup({
+    html = "text/html",
+    js   = "application/javascript",
+    css  = "text/css",
+    png  = "image/png",
+    jpg  = "image/jpeg",
+    jpeg = "image/jpeg",
+    gif  = "image/gif",
+    svg  = "image/svg+xml"
+  }, lower(split(".", each.value)[length(split(".", each.value)) - 1]), "application/octet-stream")
+}
+
+resource "aws_s3_object" "index" {
+  bucket       = aws_s3_bucket.site.id
+  key          = "index.html"
+  content      = local.rendered_index
+  content_type = "text/html; charset=utf-8"
+  etag         = md5(local.rendered_index)
+}
+
 
 # Allow public reads (website hosting)
 resource "aws_s3_bucket_public_access_block" "site" {
@@ -122,8 +157,8 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 }
 
 # --- Lambda function (Node 18) ---
-resource "aws_lambda_function" "api" {
-  function_name    = local.lambda_name
+resource "aws_lambda_function" "watch" {
+  function_name    = "${var.project}-watch"
   role             = aws_iam_role.lambda.arn
   runtime          = "nodejs18.x"
   handler          = "index.handler"
@@ -141,25 +176,58 @@ resource "aws_lambda_function" "api" {
   timeout     = 10
 }
 
-# Public function URL (no auth, CORS open — you can tighten to your domain later)
-resource "aws_lambda_function_url" "api" {
-  function_name      = aws_lambda_function.api.function_name
-  authorization_type = "NONE"
-  cors {
-    allow_origins     = ["*"]   # or your site origin
-    allow_methods     = ["GET"] # not "OPTIONS"
-    allow_headers     = ["*"]
-    expose_headers    = []
-    max_age           = 3600
-    allow_credentials = false
+# Search Lambda function
+resource "aws_lambda_function" "search" {
+  function_name    = "${var.project}-search"
+  role             = aws_iam_role.lambda.arn
+  runtime          = "nodejs18.x"
+  handler          = "index.handler"
+  filename         = data.archive_file.search_zip.output_path
+  source_code_hash = data.archive_file.search_zip.output_base64sha256
+  environment {
+    variables = merge(var.lambda_env, {
+      TMDB_KEY = var.tmdb_key
+    })
   }
+  memory_size = 256
+  timeout     = 10
 }
 
-resource "aws_s3_object" "index" {
-  bucket       = aws_s3_bucket.site.id
-  key          = "index.html"
-  content      = local.rendered_index
-  content_type = "text/html; charset=utf-8"
-  etag         = md5(local.rendered_index)
+# HTTP API Gateway for search and watch endpoints
+resource "aws_apigatewayv2_api" "http" {
+  name          = "${var.project}-api"
+  protocol_type = "HTTP"
 }
 
+resource "aws_apigatewayv2_integration" "search" {
+  api_id           = aws_apigatewayv2_api.http.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.search.invoke_arn
+  payload_format_version = "2.0"
+}
+resource "aws_apigatewayv2_route" "search" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "GET /search"
+  target    = "integrations/${aws_apigatewayv2_integration.search.id}"
+}
+
+resource "aws_apigatewayv2_integration" "watch" {
+  api_id           = aws_apigatewayv2_api.http.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.watch.invoke_arn
+  payload_format_version = "2.0"
+}
+resource "aws_apigatewayv2_route" "watch" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "GET /watch"
+  target    = "integrations/${aws_apigatewayv2_integration.watch.id}"
+}
+
+resource "aws_lambda_permission" "allow_api" {
+  for_each       = { for route in [aws_apigatewayv2_route.search, aws_apigatewayv2_route.watch] : route.id => route }
+  statement_id  = "AllowInvoke-${each.key}"
+  action        = "lambda:InvokeFunction"
+  function_name = each.value.route_key == "GET /search" ? aws_lambda_function.search.function_name : aws_lambda_function.watch.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/${each.value.route_key}"
+}

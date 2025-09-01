@@ -1,0 +1,568 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Who Streams It? (local)</title>
+<style>
+  :root { 
+    --w: 680px; 
+    --main-black:rgb(10 10 10);
+    --secondary-black: rgb(29 29 29);
+    --accent-blue: rgb(142 162 218);
+    --text:#ccc6c6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    background: rgb(10 10 10);
+    color: var(--text);
+  }
+  .wrap {
+    width: min(90vw, var(--w));
+    display: grid;
+    gap: 1rem;
+    text-align: center;
+  }
+  h1 {
+    margin: 0 0 .25rem 0;
+    font-size: clamp(1.4rem, 2.5vw + .8rem, 2rem);
+    font-weight: 700;
+    /* Gradient text */
+  background: linear-gradient(20deg, #ff416c, #ff4b2b, #86a8e7, #91eae4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+  form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .75rem;
+    justify-items: center;
+  }
+  .row {
+    width : 80%;
+    display: flex;
+  }
+  /* Layout: input 60%, each selector 20% */
+  .row > input[type="text"] {
+    flex: 10;
+    min-width: 0;
+  }
+  .row > .dropdown {
+    min-width: 0;
+    margin-left: 5px;
+    position: relative;
+  }
+
+  @media (min-width: 720px) {
+    .row {
+      display: flex;
+      align-items: center;
+    }
+  }
+  input[type="text"]{
+    opacity: 0.8;
+    width: 100%;
+    padding: .85rem 1rem;
+    border: 1px solid var(--secondary-black);
+    background-color: var(--secondary-black);
+    border-radius: .6rem;
+    font-size: 1rem;
+    outline: none;
+    color : var(--text);
+    transition : all 150ms ease-in;
+  }
+
+  input[type="text"]:hover {
+    opacity: 1;
+    border-color: var(--accent-blue);
+  }
+  input[type="text"]:focus {
+    opacity:1;
+    border-color: var(--accent-blue); 
+    box-shadow: 0 0 0 3px #7aa7ff33; 
+  }
+  /* Remove default blue focus outline */
+  input:focus, button:focus, .dd-btn:focus, input[type="checkbox"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  button {
+    padding: .85rem 1.1rem;
+    border: 1px solid var(--accent-blue);
+    background: var(--secondary-black);
+    color: var(--secondary-black);
+    border-radius: .6rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 150ms ease-in;
+    color : var(--accent-blue); 
+  }
+  button:hover { 
+    filter: brightness(0.90);
+    color:var(--text);
+  }
+  #searchBtn:hover {
+    background-color: var(--accent-blue);
+  }
+  /* Dropdown */
+  .dd-btn {
+    border:none;
+
+    background: var(--secondary-black);
+    cursor: pointer; 
+    font-size: 1rem;
+    transition: all 150ms ease-in;
+
+  }
+
+  #ddBtn:hover{
+    background-color: rgb(222 100 94);
+  }
+  #pddBtn:hover {
+    background-color: rgb(255 75 44);
+  }
+  .dd-panel {
+    color: var(--text);
+    min-width: 23vw;
+    position: absolute; left: 0; right: 0; top: calc(100% + .4rem);
+    background: var(--secondary-black); border: 1px solid var(--secondary-black); border-radius: .6rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    z-index: 20;
+    display: none;
+  }
+  .dd-panel.open {
+     display: block; 
+  }
+  .dd-top {
+    display: flex; 
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem .8rem; border-bottom: 1px solid var(--secondary-black); background: var(--secondary-black);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-radius: 20px;
+  }
+  .dd-list {
+    max-height: 280px; overflow: auto; padding: .4rem .2rem;
+  }
+  .dd-item {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .45rem .8rem; cursor: pointer;
+  }
+  .dd-item:hover { background: var(--secondary-black); }
+  .muted { color: #666; font-size: .9rem; }
+  #out { margin-top: 1.25rem; text-align: left; }
+  #out ul { margin: .4rem 0 0 0; padding-left: 1rem; line-height: 1.7; }
+  .pill { font-size: .8rem; padding: .05rem .4rem; border: 1px solid var(--secondary-black); border-radius: .4rem; margin-left: .4rem; }
+  /* Cards for search results */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .card {
+    cursor: pointer;
+    border: 1px solid var(--secondary-black);
+    border-radius: .6rem;
+    overflow: hidden;
+    background: var(--secondary-black);
+    text-align: center;
+  }
+  .card img {
+    width: 100%;
+    display: block;
+  }
+  .card .title {
+    padding: .5rem;
+    font-size: .9rem;
+    color : var(--text);
+  }
+  /* Popup overlay for providers */
+  .popup {
+    display: none;
+    position: fixed;
+    top: 10vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(90vw, var(--w));
+    max-height: 80vh;
+    background: #111; /* main black color */
+    color: #fff;
+    border-radius: .6rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    z-index: 100;
+    padding: 1rem;
+  }
+  .popup.open { display: block; }
+  /* Scrollable content area in popup, below the close button */
+  #popupContent {
+  overflow-y: auto;
+  scrollbar-width: none; /* hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* hide scrollbar for IE and Edge */
+    max-height: calc(80vh - 2.5rem); /* adjust for padding and button height */
+    margin-top: 1.5rem;
+  }
+  /* Hide scrollbar for WebKit browsers */
+  #popupContent::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+  }
+  /* Centered vertical/horizontal transform */
+  .popup.centered {
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .popup-close {
+    position: absolute;
+    top: .5rem;
+    right: .7rem;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: rgba(255, 107, 107, 0.6);
+  }
+  .popup-close:hover {
+    color: #ff4d4d;
+  }
+  /* Country rows in provider popup */
+  .country-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .75rem;
+    color : var(--text);
+  }
+  .country-row strong {
+    margin: 0;
+  }
+  .country-row .icons img {
+    width: 32px;
+    height: auto;
+    margin-right: .5rem;
+    vertical-align: middle;
+    border-radius: .4rem;
+  }
+  #popupContent {
+    color : var(--text);
+  }
+</style>
+
+<div class="wrap">
+  <h1>Who Streams It?</h1>
+
+  <form id="f" autocomplete="off">
+    <div class="row">
+      <input id="q" type="text" placeholder="Search title (e.g., Dune)" required />
+
+      <div class="dropdown" id="countryDropdown">
+        <button type="button" class="dd-btn" id="ddBtn"><span class="muted" id="ddCount">0</span></button>
+        <div class="dd-panel" id="ddPanel" aria-label="Country selector" role="listbox">
+          <div class="dd-top">
+            <label style="display:flex;align-items:center;gap:.5rem;">
+              <input type="checkbox" id="selectAll" />
+              <strong>Select all</strong>
+            </label>
+          </div>
+          <div class="dd-list" id="ddList"></div>
+        </div>
+      </div>
+      <div class="dropdown" id="providerDropdown">
+        <button type="button" class="dd-btn" id="pddBtn"><span class="muted" id="pddCount">0</span></button>
+        <div class="dd-panel" id="pddPanel" aria-label="Provider selector" role="listbox">
+          <div class="dd-top">
+            <label style="display:flex;align-items:center;gap:.5rem;">
+              <input type="checkbox" id="pselectAll" />
+              <strong>Select all</strong>
+            </label>
+          </div>
+          <div class="dd-list" id="pddList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <button id="searchBtn" type="submit">Search</button>
+    </div>
+  </form>
+
+  <!-- Popup for search results and streaming list -->
+  <div id="popup" class="popup" role="dialog" aria-modal="true">
+    <button id="popupClose" class="popup-close" aria-label="Close popup">×</button>
+    <div id="popupContent"></div>
+  </div>
+  <div id="out"></div>
+</div>
+
+<script>
+  // --- Config ---
+  const API_SEARCH = "/search"; // search endpoint
+  const API_WATCH = "/watch";   // wait/provider endpoint
+
+  // TMDB supported regions (ISO-3166-1 codes). Keep this list in sync as needed.
+  // Short, curated set covers TMDB regions broadly; extend if you want absolutely all.
+  const TMDB_REGIONS = [
+    ["US","United States"],["GB","United Kingdom"],["FR","France"],["DE","Germany"],["ES","Spain"],
+    ["IT","Italy"],["CA","Canada"],["AU","Australia"],["BR","Brazil"],["MX","Mexico"],
+    ["AR","Argentina"],["CL","Chile"],["CO","Colombia"],["PE","Peru"],["VE","Venezuela"],
+    ["NL","Netherlands"],["BE","Belgium"],["LU","Luxembourg"],["IE","Ireland"],["PT","Portugal"],
+    ["SE","Sweden"],["NO","Norway"],["DK","Denmark"],["FI","Finland"],["IS","Iceland"],
+    ["CH","Switzerland"],["AT","Austria"],["PL","Poland"],["CZ","Czechia"],["SK","Slovakia"],
+    ["HU","Hungary"],["RO","Romania"],["BG","Bulgaria"],["GR","Greece"],["TR","Türkiye"],
+    ["RU","Russia"],["UA","Ukraine"],["EE","Estonia"],["LV","Latvia"],["LT","Lithuania"],
+    ["SI","Slovenia"],["HR","Croatia"],["RS","Serbia"],
+    ["AL","Albania"],["MT","Malta"],["CY","Cyprus"],["IL","Israel"],["SA","Saudi Arabia"],
+    ["QA","Qatar"],["KW","Kuwait"],["BH","Bahrain"],["OM","Oman"],
+    ["EG","Egypt"],["MA","Morocco"],["TN","Tunisia"],["ZA","South Africa"],["NG","Nigeria"],
+    ["KE","Kenya"],["GH","Ghana"],["IN","India"],["PK","Pakistan"],["BD","Bangladesh"],
+    ["LK","Sri Lanka"],["NP","Nepal"],["ID","Indonesia"],["MY","Malaysia"],["SG","Singapore"],
+    ["PH","Philippines"],["TH","Thailand"],["VN","Vietnam"],["KH","Cambodia"],["LA","Laos"],
+    ["JP","Japan"],["KR","South Korea"],["TW","Taiwan"],["HK","Hong Kong"],["MO","Macau"],
+    ["CN","China"],["NZ","New Zealand"]
+  ];
+
+  // --- Elements ---
+  const f = document.getElementById("f");
+  const q = document.getElementById("q");
+  const out = document.getElementById("out");
+  const popup = document.getElementById("popup");
+  const popupContent = document.getElementById("popupContent");
+  const popupClose = document.getElementById("popupClose");
+
+  const dd = document.getElementById("countryDropdown");
+  const ddBtn = document.getElementById("ddBtn");
+  const ddPanel = document.getElementById("ddPanel");
+  const ddList = document.getElementById("ddList");
+  const ddCount = document.getElementById("ddCount");
+  const selectAll = document.getElementById("selectAll");
+
+  const pdd = document.getElementById("providerDropdown");
+  const pddBtn = document.getElementById("pddBtn");
+  const pddPanel = document.getElementById("pddPanel");
+  const pddList = document.getElementById("pddList");
+  const pddCount = document.getElementById("pddCount");
+  const pselectAll = document.getElementById("pselectAll");
+
+  // --- Dropdown init ---
+  const selected = new Set();
+  function renderList() {
+    ddList.innerHTML = "";
+    TMDB_REGIONS.forEach(([code, name]) => {
+      const id = `cc_${code}`;
+      const row = document.createElement("label");
+      row.className = "dd-item";
+      row.innerHTML = `
+        <input type="checkbox" data-code="${code}" id="${id}" ${selected.has(code) ? "checked" : ""}/>
+        <span>${name} <span class="muted">(${code})</span></span>
+      `;
+      row.addEventListener("change", (e) => {
+        const box = row.querySelector("input[type=checkbox]");
+        if (box.checked) selected.add(code); else selected.delete(code);
+        updateCounts();
+        syncSelectAll();
+      });
+      ddList.appendChild(row);
+    });
+    updateCounts();
+    syncSelectAll();
+  }
+  function updateCounts() {
+    const n = selected.size;
+  ddCount.textContent = `${n}`;
+  }
+  function syncSelectAll() {
+    selectAll.checked = selected.size === TMDB_REGIONS.length;
+    selectAll.indeterminate = selected.size > 0 && selected.size < TMDB_REGIONS.length;
+  }
+
+  selectAll.addEventListener("change", () => {
+    if (selectAll.checked) {
+      TMDB_REGIONS.forEach(([c]) => selected.add(c));
+    } else {
+      selected.clear();
+    }
+    renderList();
+  });
+
+  ddBtn.addEventListener("click", () => {
+    ddPanel.classList.toggle("open");
+  });
+  document.addEventListener("click", (e) => {
+    if (!dd.contains(e.target)) ddPanel.classList.remove("open");
+  });
+
+  // Preselect a few common regions (optional)
+  ["US","GB","FR"].forEach(c => selected.add(c));
+  renderList();
+
+  // --- Providers dropdown ---
+  const PROVIDERS = [
+    ["Netflix","Netflix"],
+    ["Disney Plus","Disney Plus"],
+    ["Amazon Prime Video","Amazon Prime Video"],
+    ["HBO","HBO Max Amazon Channel"],
+    ["Hulu","Hulu"]
+  ];
+  const selectedProviders = new Set();
+  function renderProviderList() {
+    pddList.innerHTML = "";
+    PROVIDERS.forEach(([code,name]) => {
+      const id = `pd_${code.replace(/\s+/g,'')}`;
+      const row = document.createElement("label");
+      row.className = "dd-item";
+      row.innerHTML = `
+        <input type="checkbox" data-provider="${name}" id="${id}" ${selectedProviders.has(name) ? "checked" : ""}/>
+        <span>${code}</span>
+      `;
+      row.querySelector("input").addEventListener("change", () => {
+        const box = row.querySelector("input");
+  if (box.checked) selectedProviders.add(name);
+  else selectedProviders.delete(name);
+  pddCount.textContent = `${selectedProviders.size}`;
+        pselectAll.checked = selectedProviders.size === PROVIDERS.length;
+        pselectAll.indeterminate = selectedProviders.size > 0 && selectedProviders.size < PROVIDERS.length;
+      });
+      pddList.appendChild(row);
+    });
+    pddCount.textContent = `${selectedProviders.size}`;
+    pselectAll.checked = selectedProviders.size === PROVIDERS.length;
+    pselectAll.indeterminate = selectedProviders.size > 0 && selectedProviders.size < PROVIDERS.length;
+  }
+  pselectAll.addEventListener("change", () => {
+    if (pselectAll.checked) PROVIDERS.forEach(([,n]) => selectedProviders.add(n));
+    else selectedProviders.clear();
+    renderProviderList();
+  });
+  pddBtn.addEventListener("click", () => pddPanel.classList.toggle("open"));
+  document.addEventListener("click", e => { if (!pdd.contains(e.target)) pddPanel.classList.remove("open"); });
+  // preselect all
+  PROVIDERS.forEach(([,n]) => selectedProviders.add(n));
+  renderProviderList();
+
+  // --- Form submit: search movies in popup ---
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    ddPanel.classList.remove("open");
+    // open popup (cards) and clear content, ensure not centered
+    popupContent.innerHTML = "";
+    popup.classList.remove("centered");
+    popup.classList.add("open");
+    document.body.style.overflow = 'hidden';
+    out.innerHTML = "";
+    const loading = document.createElement('div');
+    loading.textContent = 'Searching…';
+    popupContent.appendChild(loading);
+
+    const countriesCsv = [...selected].join(",");
+    if (!countriesCsv) {
+      popupContent.textContent = 'Pick at least one country.';
+      return;
+    }
+
+    const searchUrl = new URL(API_SEARCH, location.origin);
+    searchUrl.searchParams.set("title", q.value.trim());
+
+    try {
+      const r = await fetch(searchUrl);
+      const { results } = await r.json();
+      popupContent.innerHTML = "";
+      if (!results.length) {
+        popupContent.textContent = 'No movies found.';
+        return;
+      }
+      const cardsDiv = document.createElement('div');
+      cardsDiv.className = 'cards';
+      results.forEach(movie => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.title = movie.title;
+        card.innerHTML = `
+          ${movie.poster ? `<img src="https://image.tmdb.org/t/p/w154${movie.poster}" alt="${movie.title}" />` : ``}
+          <div class="title">${movie.title} (${movie.year})</div>
+        `;
+        card.addEventListener("click", () => fetchProviders(movie.title));
+        cardsDiv.appendChild(card);
+      });
+      popupContent.appendChild(cardsDiv);
+    } catch (err) {
+      popupContent.textContent = 'Error: ' + err;
+    }
+  });
+
+   // --- Fetch streaming providers for a given title ---
+   async function fetchProviders(title) {
+     // show loading in popup and center it
+     popupContent.innerHTML = "Loading…";
+     popup.classList.add("centered");
+     popup.classList.add("open");
+     document.body.style.overflow = 'hidden';
+
+     const countriesCsv = [...selected].join(",");
+     const url = new URL(API_WATCH, location.origin);
+     url.searchParams.set("title", title);
+     url.searchParams.set("countries", countriesCsv);
+     try {
+       const r = await fetch(url);
+       const data = await r.json();
+       const regionNames = new Intl.DisplayNames([navigator.language || "en"], { type: "region" });
+
+      // group by country and render icons per provider
+      // filter to valid TMDB providers list and user selection
+      const validSet = new Set(PROVIDERS.map(([_,name]) => name));
+      let entries = (data.entries || []).filter(e => validSet.has(e.provider));
+      if (selectedProviders.size > 0 && selectedProviders.size < PROVIDERS.length) {
+        entries = entries.filter(e => selectedProviders.has(e.provider));
+      }
+      // Group results by country
+      const byCountry = {};
+      entries.forEach(e => {
+        if (!byCountry[e.country]) byCountry[e.country] = [];
+        if (!byCountry[e.country].includes(e.provider)) byCountry[e.country].push(e.provider);
+      });
+      popupContent.innerHTML = "";
+      if (!Object.keys(byCountry).length) {
+        popupContent.textContent = 'No streaming providers found.';
+      } else {
+        Object.entries(byCountry).forEach(([code, providers]) => {
+          const countryName = regionNames.of(code) || code;
+          const row = document.createElement('div');
+          row.className = 'country-row';
+          const label = document.createElement('strong');
+          label.textContent = `${countryName}:`;
+          row.appendChild(label);
+          const icons = document.createElement('span');
+          icons.className = 'icons';
+          providers.forEach(name => {
+            const img = document.createElement('img');
+            const key = name.toLowerCase().replace(/\s+/g, '').replace('+','plus').replace('amazonprimevideo','amazon-prime');
+            img.src = `./imgs/${key}.png`;
+            img.alt = name;
+            icons.appendChild(img);
+          });
+          row.appendChild(icons);
+          popupContent.appendChild(row);
+        });
+      }
+     } catch (err) {
+      popupContent.textContent = "Error: " + err;
+     }
+   }
+
+   // --- Popup close handler ---
+   popupClose.addEventListener("click", () => {
+     popup.classList.remove("open");
+     popup.classList.remove("centered");
+     document.body.style.overflow = ''; // restore scroll
+   });
+   // click outside to close
+   popup.addEventListener("click", (e) => {
+     if (e.target === popup) popupClose.click();
+   });
+</script>
