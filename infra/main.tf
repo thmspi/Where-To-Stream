@@ -34,9 +34,9 @@ locals {
   bucket_name = "${var.project}-site-${random_id.rand.hex}"
   lambda_name = "${var.project}-lambda"
   rendered_index = templatefile("${path.module}/web/index.html.tftpl", {
-    function_url = aws_lambda_function_url.api.function_url
+    function_url = aws_apigatewayv2_api.http.api_endpoint
   })
-  static_files = fileset("${path.module}/web", ["**"])
+  static_files = fileset("${path.module}/web", "**")
 }
 
 

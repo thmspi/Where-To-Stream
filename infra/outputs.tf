@@ -4,5 +4,5 @@ output "website_url" {
 }
 
 output "function_url" {
-  value = aws_lambda_function_url.api.function_url
+  value = aws_apigatewayv2_api.http.api_endpoint
 }
