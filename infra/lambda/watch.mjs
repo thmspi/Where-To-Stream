@@ -1,12 +1,13 @@
 import { whereToStream } from "../lambda/core.js";
 
 export async function handler(event) {
+  const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
   const qs = event.queryStringParameters || {};
   const title = (qs.title || "").trim();
   if (!title) {
     return {
       statusCode: 400,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ error: "Missing ?title" })
     };
   }
@@ -22,13 +23,13 @@ export async function handler(event) {
     }
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(result)
     };
   } catch (err) {
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ error: err.message })
     };
   }

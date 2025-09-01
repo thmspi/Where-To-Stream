@@ -6,10 +6,11 @@ const TMDB = process.env.TMDB_KEY;
 
 export async function handler(event) {
   const title = (event.queryStringParameters?.title || "").trim();
+  const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
   if (!title) {
     return {
       statusCode: 400,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ error: "Missing ?title" })
     };
   }
@@ -28,13 +29,13 @@ export async function handler(event) {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ results: hits })
     };
   } catch (err) {
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ error: err.message })
     };
   }
