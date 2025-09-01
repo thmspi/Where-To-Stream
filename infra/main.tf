@@ -199,10 +199,9 @@ resource "aws_apigatewayv2_api" "http" {
   name          = "${var.project}-api"
   protocol_type = "HTTP"
   cors_configuration {
-    allow_headers = ["*"]
-    allow_methods = ["GET", "OPTIONS"]
-    allow_origins = ["*"]
-    expose_headers = ["*"]
+    allow_origins  = ["*"]
+    allow_methods  = ["GET", "OPTIONS"]
+    allow_headers  = ["*"]
   }
 }
 
@@ -228,6 +227,13 @@ resource "aws_apigatewayv2_route" "watch" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "GET /watch"
   target    = "integrations/${aws_apigatewayv2_integration.watch.id}"
+}
+
+// Deploy all changes automatically to the default stage
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.http.id
+  name        = "$default"
+  auto_deploy = true
 }
 
 // Permission for API Gateway to invoke the search lambda
