@@ -1,29 +1,35 @@
 import { whereToStream } from "../lambda/core.js";
 
-// Endpoint API local : GET /watch?title=...&countries=FR,US&include=strict|plus
-app.get("/watch", async (req, res) => {
+export async function handler(event) {
+  const qs = event.queryStringParameters || {};
+  const title = (qs.title || "").trim();
+  if (!title) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Missing ?title" })
+    };
+  }
+  const countries = (qs.countries || "FR,US,DE,GB")
+    .split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+  const includeMode = (qs.include || "plus").toLowerCase().includes("strict") ? "strict" : "plus";
   try {
-    const title = (req.query.title || "").trim();
-    if (!title) return res.status(400).json({ error: "Missing ?title" });
-
-    const countries = (req.query.countries || "FR,US,DE,GB")
-      .split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
-
-    const includeMode = (req.query.include || "plus").toLowerCase().includes("strict") ? "strict" : "plus";
-
-    const result = await whereToStream({ title, countries, includeMode, TMDB_KEY: TMDB });
-    // Apply provider filter if requested
-    const providers = (req.query.providers || "").split(",").map(s => s.trim()).filter(Boolean);
+    const result = await whereToStream({ title, countries, includeMode, TMDB_KEY: process.env.TMDB_KEY });
+    const providers = (qs.providers || "").split(",").map(s => s.trim()).filter(Boolean);
     if (providers.length) {
       const allow = new Set(providers);
       result.entries = result.entries.filter(e => allow.has(e.provider));
     }
-    res.json(result);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: String(e) });
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result)
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: err.message })
+    };
   }
-});
-
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Dev server on http://localhost:${PORT}`));
+}

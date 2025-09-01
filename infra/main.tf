@@ -33,9 +33,8 @@ provider "aws" {
 locals {
   bucket_name = "${var.project}-site-${random_id.rand.hex}"
   lambda_name = "${var.project}-lambda"
-  rendered_index = templatefile("${path.module}/web/index.html.tftpl", {
-    function_url = aws_apigatewayv2_api.http.api_endpoint
-  })
+  # Load static index.html directly (no template file)
+  rendered_index = file("${path.module}/web/index.html")
   static_files = fileset("${path.module}/web", "**")
 }
 
@@ -161,7 +160,7 @@ resource "aws_lambda_function" "watch" {
   function_name    = "${var.project}-watch"
   role             = aws_iam_role.lambda.arn
   runtime          = "nodejs18.x"
-  handler          = "index.handler"
+  handler          = "watch.handler"
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
@@ -181,7 +180,7 @@ resource "aws_lambda_function" "search" {
   function_name    = "${var.project}-search"
   role             = aws_iam_role.lambda.arn
   runtime          = "nodejs18.x"
-  handler          = "index.handler"
+  handler          = "search.handler"
   filename         = data.archive_file.search_zip.output_path
   source_code_hash = data.archive_file.search_zip.output_base64sha256
   environment {
