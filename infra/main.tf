@@ -223,11 +223,19 @@ resource "aws_apigatewayv2_route" "watch" {
   target    = "integrations/${aws_apigatewayv2_integration.watch.id}"
 }
 
-resource "aws_lambda_permission" "allow_api" {
-  for_each       = { for route in [aws_apigatewayv2_route.search, aws_apigatewayv2_route.watch] : route.id => route }
-  statement_id  = "AllowInvoke-${each.key}"
+// Permission for API Gateway to invoke the search lambda
+resource "aws_lambda_permission" "search_api" {
+  statement_id  = "AllowInvokeSearch"
   action        = "lambda:InvokeFunction"
-  function_name = each.value.route_key == "GET /search" ? aws_lambda_function.search.function_name : aws_lambda_function.watch.function_name
+  function_name = aws_lambda_function.search.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/${each.value.route_key}"
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/GET/search"
+}
+// Permission for API Gateway to invoke the watch lambda
+resource "aws_lambda_permission" "watch_api" {
+  statement_id  = "AllowInvokeWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.watch.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/GET/watch"
 }
