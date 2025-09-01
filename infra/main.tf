@@ -164,8 +164,8 @@ resource "aws_lambda_function" "watch" {
   role             = aws_iam_role.lambda.arn
   runtime          = "nodejs18.x"
   handler          = "watch.handler"
-  filename         = data.archive_file.lambda_zip.output_path
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  filename         = data.archive_file.lambda_watch_zip.output_path
+  source_code_hash = data.archive_file.lambda_watch_zip.output_base64sha256
 
   environment {
     variables = merge(var.lambda_env, {
@@ -184,8 +184,8 @@ resource "aws_lambda_function" "search" {
   role             = aws_iam_role.lambda.arn
   runtime          = "nodejs18.x"
   handler          = "search.handler"
-  filename         = data.archive_file.search_zip.output_path
-  source_code_hash = data.archive_file.search_zip.output_base64sha256
+  filename         = data.archive_file.lambda_search_zip.output_path
+  source_code_hash = data.archive_file.lambda_search_zip.output_base64sha256
   environment {
     variables = merge(var.lambda_env, {
       TMDB_KEY = var.tmdb_key
