@@ -206,6 +206,12 @@ resource "aws_apigatewayv2_api" "http" {
   }
 }
 
+// Create a CloudWatch Log Group for API Gateway access logs
+resource "aws_cloudwatch_log_group" "api_gw_access" {
+  name              = "/aws/http-api/${aws_apigatewayv2_api.http.id}"
+  retention_in_days = 14
+}
+
 resource "aws_apigatewayv2_integration" "search" {
   api_id           = aws_apigatewayv2_api.http.id
   integration_type = "AWS_PROXY"
@@ -230,11 +236,29 @@ resource "aws_apigatewayv2_route" "watch" {
   target    = "integrations/${aws_apigatewayv2_integration.watch.id}"
 }
 
-// Deploy all changes automatically to the default stage
+// Deploy and configure logs for the default stage
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
   auto_deploy = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gw_access.arn
+    format = jsonencode({
+      requestId      = "$context.requestId",
+      requestTime    = "$context.requestTime",
+      httpMethod     = "$context.httpMethod",
+      routeKey       = "$context.routeKey",
+      status         = "$context.status",
+      responseLength = "$context.responseLength"
+    })
+  }
+
+  default_route_settings {
+    data_trace_enabled       = true
+    detailed_metrics_enabled = true
+    logging_level            = "INFO"
+  }
 }
 
 // Permission for API Gateway to invoke the search lambda
