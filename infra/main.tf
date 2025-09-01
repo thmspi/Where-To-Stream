@@ -198,6 +198,12 @@ resource "aws_lambda_function" "search" {
 resource "aws_apigatewayv2_api" "http" {
   name          = "${var.project}-api"
   protocol_type = "HTTP"
+  cors_configuration {
+    allow_headers = ["*"]
+    allow_methods = ["GET", "OPTIONS"]
+    allow_origins = ["*"]
+    expose_headers = ["*"]
+  }
 }
 
 resource "aws_apigatewayv2_integration" "search" {
