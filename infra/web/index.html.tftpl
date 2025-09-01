@@ -469,14 +469,19 @@
       return;
     }
 
-    const searchUrl = new URL(API_SEARCH, location.origin);
-    searchUrl.searchParams.set("title", q.value.trim());
+    // Build absolute search URL
+    const searchUrl = `${API_SEARCH}?title=${encodeURIComponent(q.value.trim())}`;
 
     try {
       const r = await fetch(searchUrl);
-      const { results } = await r.json();
+      const json = await r.json();
       popupContent.innerHTML = "";
-      if (!results.length) {
+      if (!r.ok) {
+        popupContent.textContent = json.error || 'Search error';
+        return;
+      }
+      const results = json.results || [];
+      if (results.length === 0) {
         popupContent.textContent = 'No movies found.';
         return;
       }
@@ -508,12 +513,11 @@
      document.body.style.overflow = 'hidden';
 
      const countriesCsv = [...selected].join(",");
-     const url = new URL(API_WATCH, location.origin);
-     url.searchParams.set("title", title);
-     url.searchParams.set("countries", countriesCsv);
+     const url = `${API_WATCH}?title=${encodeURIComponent(title)}&countries=${encodeURIComponent(countriesCsv)}`;
      try {
        const r = await fetch(url);
        const data = await r.json();
+       if (!r.ok) throw new Error(data.error || 'Providers fetch error');
        const regionNames = new Intl.DisplayNames([navigator.language || "en"], { type: "region" });
 
       // group by country and render icons per provider

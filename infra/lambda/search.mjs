@@ -1,9 +1,6 @@
 // dev-server/index.mjs
 import fetch from "node-fetch";
 
-dotenv.config(); // charge TMDB_KEY depuis .env
-const TMDB = process.env.TMDB_KEY;
-
 export async function handler(event) {
   const title = (event.queryStringParameters?.title || "").trim();
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
@@ -16,7 +13,7 @@ export async function handler(event) {
   }
 
   try {
-    const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_KEY}&query=${encodeURIComponent(title)}`;
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_KEY}&query=${encodeURIComponent(title)}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`TMDB HTTP ${resp.status}`);
     const { results = [] } = await resp.json();
