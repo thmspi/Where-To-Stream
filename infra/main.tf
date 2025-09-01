@@ -33,10 +33,10 @@ provider "aws" {
 locals {
   bucket_name = "${var.project}-site-${random_id.rand.hex}"
   lambda_name = "${var.project}-lambda"
-  # Render index.html from template, injecting the API Gateway URL
-  rendered_index = templatefile("${path.module}/web/index.html.tftpl", {
-    function_url = aws_apigatewayv2_api.http.api_endpoint
-  })
+  # Load raw HTML template and replace placeholder with API URL
+  raw_index      = file("${path.module}/web/index.html.tftpl")
+  # Replace the placeholder ($${function_url}) with the real API URL
+  rendered_index = replace(local.raw_index, "@@FUNCTION_URL@@", aws_apigatewayv2_api.http.api_endpoint)
   static_files = fileset("${path.module}/web", "**")
 }
 

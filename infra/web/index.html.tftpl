@@ -301,14 +301,14 @@
   <div id="out"></div>
 </div>
 
+<!-- Injected API endpoint placeholder -->
 <script>
-  // --- Config ---
-  // API Gateway endpoints
-  // Replace <YOUR_API_ID> with your actual API Gateway ID
-  const API_BASE = 'https://<YOUR_API_ID>.execute-api.eu-west-3.amazonaws.com';
+  const API_BASE   = "@@FUNCTION_URL@@";
   const API_SEARCH = `${API_BASE}/search`;
   const API_WATCH  = `${API_BASE}/watch`;
+</script>
 
+<script>
   // TMDB supported regions (ISO-3166-1 codes). Keep this list in sync as needed.
   // Short, curated set covers TMDB regions broadly; extend if you want absolutely all.
   const TMDB_REGIONS = [
@@ -362,8 +362,8 @@
       const row = document.createElement("label");
       row.className = "dd-item";
       row.innerHTML = `
-        <input type="checkbox" data-code="${code}" id="${id}" ${selected.has(code) ? "checked" : ""}/>
-        <span>${name} <span class="muted">(${code})</span></span>
+        <input type="checkbox" data-code="$${code}" id="$${id}" $${selected.has(code) ? "checked" : ""}/>
+        <span>$${name} <span class="muted">($${code})</span></span>
       `;
       row.addEventListener("change", (e) => {
         const box = row.querySelector("input[type=checkbox]");
@@ -378,7 +378,7 @@
   }
   function updateCounts() {
     const n = selected.size;
-  ddCount.textContent = `${n}`;
+  ddCount.textContent = `$${n}`;
   }
   function syncSelectAll() {
     selectAll.checked = selected.size === TMDB_REGIONS.length;
@@ -421,20 +421,20 @@
       const row = document.createElement("label");
       row.className = "dd-item";
       row.innerHTML = `
-        <input type="checkbox" data-provider="${name}" id="${id}" ${selectedProviders.has(name) ? "checked" : ""}/>
-        <span>${code}</span>
+        <input type="checkbox" data-provider="$${name}" id="$${id}" $${selectedProviders.has(name) ? "checked" : ""}/>
+        <span>$${code}</span>
       `;
       row.querySelector("input").addEventListener("change", () => {
         const box = row.querySelector("input");
   if (box.checked) selectedProviders.add(name);
   else selectedProviders.delete(name);
-  pddCount.textContent = `${selectedProviders.size}`;
+  pddCount.textContent = `$${selectedProviders.size}`;
         pselectAll.checked = selectedProviders.size === PROVIDERS.length;
         pselectAll.indeterminate = selectedProviders.size > 0 && selectedProviders.size < PROVIDERS.length;
       });
       pddList.appendChild(row);
     });
-    pddCount.textContent = `${selectedProviders.size}`;
+  pddCount.textContent = `$${selectedProviders.size}`;
     pselectAll.checked = selectedProviders.size === PROVIDERS.length;
     pselectAll.indeterminate = selectedProviders.size > 0 && selectedProviders.size < PROVIDERS.length;
   }
