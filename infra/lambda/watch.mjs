@@ -1,4 +1,4 @@
-import { whereToStream } from "../lambda/core.js";
+import { whereToStream } from "./core.js";
 
 export async function handler(event) {
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };

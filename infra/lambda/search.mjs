@@ -1,5 +1,6 @@
 // dev-server/index.mjs
 import fetch from "node-fetch";
+// no dotenv in Lambdas
 
 export async function handler(event) {
   const title = (event.queryStringParameters?.title || "").trim();
@@ -15,8 +16,12 @@ export async function handler(event) {
   try {
   const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_KEY}&query=${encodeURIComponent(title)}`;
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`TMDB HTTP ${resp.status}`);
-    const { results = [] } = await resp.json();
+    const json = await resp.json();
+    if (!resp.ok) {
+      console.error("TMDB search failed", resp.status, json);
+      throw new Error(json.status_message || `TMDB HTTP ${resp.status}`);
+    }
+    const results = Array.isArray(json.results) ? json.results : [];
     const hits = results.map(hit => ({
       id: hit.id,
       title: hit.title,

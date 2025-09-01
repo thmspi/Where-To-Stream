@@ -67,16 +67,17 @@ data "aws_iam_policy_document" "lambda_assume" {
   }
 }
 
-data "archive_file" "lambda_zip" {
+# Package watch Lambda with core.js
+data "archive_file" "lambda_watch_zip" {
   type        = "zip"
-  source_file = "${path.module}/lambda/watch.mjs"
+  source_dir  = "${path.module}/lambda"
   output_path = "${path.module}/build/watch.zip"
 }
 
-# Archive for search Lambda
-data "archive_file" "search_zip" {
+# Package search Lambda with core.js
+data "archive_file" "lambda_search_zip" {
   type        = "zip"
-  source_file = "${path.module}/lambda/search.mjs"
+  source_dir  = "${path.module}/lambda"
   output_path = "${path.module}/build/search.zip"
 }
 
