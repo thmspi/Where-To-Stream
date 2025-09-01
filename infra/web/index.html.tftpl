@@ -303,8 +303,11 @@
 
 <script>
   // --- Config ---
-  const API_SEARCH = "/search"; // search endpoint
-  const API_WATCH = "/watch";   // wait/provider endpoint
+  // API Gateway endpoints
+  // Replace <YOUR_API_ID> with your actual API Gateway ID
+  const API_BASE = 'https://<YOUR_API_ID>.execute-api.eu-west-3.amazonaws.com';
+  const API_SEARCH = `${API_BASE}/search`;
+  const API_WATCH  = `${API_BASE}/watch`;
 
   // TMDB supported regions (ISO-3166-1 codes). Keep this list in sync as needed.
   // Short, curated set covers TMDB regions broadly; extend if you want absolutely all.
