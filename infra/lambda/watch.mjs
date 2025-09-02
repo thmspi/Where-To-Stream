@@ -1,4 +1,5 @@
 import { whereToStream } from "./core.js";
+// Node 18 runtime provides global fetch
 
 export async function handler(event) {
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };

@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+// Node 18 runtime provides global fetch
 
 // Ne garder que le streaming (flatrate) ou inclure aussi ads/free
 export function pickStreaming(region, mode = "plus") {

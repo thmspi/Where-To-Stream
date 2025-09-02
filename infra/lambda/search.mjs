@@ -1,5 +1,5 @@
 // dev-server/index.mjs
-import fetch from "node-fetch";
+// Using built-in fetch in Node.js 18 runtime
 // no dotenv in Lambdas
 
 export async function handler(event) {
