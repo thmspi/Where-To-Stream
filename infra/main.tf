@@ -195,6 +195,18 @@ resource "aws_lambda_function" "search" {
   timeout     = 10
 }
 
+// Create CloudWatch Log Group for the watch Lambda
+resource "aws_cloudwatch_log_group" "watch_lambda_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.watch.function_name}"
+  retention_in_days = 14
+}
+
+// Create CloudWatch Log Group for the search Lambda
+resource "aws_cloudwatch_log_group" "search_lambda_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.search.function_name}"
+  retention_in_days = 14
+}
+
 # HTTP API Gateway for search and watch endpoints
 resource "aws_apigatewayv2_api" "http" {
   name          = "${var.project}-api"
