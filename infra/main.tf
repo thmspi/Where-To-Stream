@@ -225,7 +225,7 @@ resource "aws_cloudwatch_log_group" "api_gw_access" {
 }
 // Create CloudWatch Log Group for API Gateway execution logs
 resource "aws_cloudwatch_log_group" "api_gw_execution" {
-  name              = "/aws/http-api/${aws_apigatewayv2_api.http.id}/$default"
+  name              = "/aws/http-api/${aws_apigatewayv2_api.http.id}/default"
   retention_in_days = 14
 }
 
