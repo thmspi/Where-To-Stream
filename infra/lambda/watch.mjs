@@ -2,6 +2,8 @@ import { whereToStream } from "./core.js";
 // Node 18 runtime provides global fetch
 
 export async function handler(event) {
+  // Log incoming event for troubleshooting
+  console.log('incoming watch event:', JSON.stringify(event));
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
   console.log("Lambda watch handler invoked with event:", JSON.stringify(event));
   const qs = event.queryStringParameters || {};
@@ -29,6 +31,7 @@ export async function handler(event) {
       body: JSON.stringify(result)
     };
   } catch (err) {
+    console.error('watch handler error:', err.stack || err);
     return {
       statusCode: 500,
       headers,
