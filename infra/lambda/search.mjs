@@ -18,6 +18,15 @@ export async function handler(event) {
   const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_KEY}&query=${encodeURIComponent(title)}`;
     const resp = await fetch(url);
     const json = await resp.json();
+    // Handle TMDB rate limiting
+    if (resp.status === 429) {
+      console.warn("TMDB rate limit exceeded", json);
+      return {
+        statusCode: 429,
+        headers,
+        body: JSON.stringify({ error: "TMDB rate limit exceeded, please try again later" })
+      };
+    }
     if (!resp.ok) {
       console.error("TMDB search failed", resp.status, json);
       throw new Error(json.status_message || `TMDB HTTP ${resp.status}`);
