@@ -1,7 +1,7 @@
 // Node 18 runtime provides global fetch
 
 // Ne garder que le streaming (flatrate) ou inclure aussi ads/free
-export function pickStreaming(region, mode = "plus") {
+function pickStreaming(region, mode = "plus") {
   if (!region) return [];
   const buckets = mode === "strict" ? ["flatrate"] : ["flatrate", "ads", "free"];
   const rankOf = k => (k === "flatrate" ? 2 : 1);
@@ -25,7 +25,7 @@ export function pickStreaming(region, mode = "plus") {
   );
 }
 
-export async function resolveTitle(query, TMDB_KEY) {
+async function resolveTitle(query, TMDB_KEY) {
   const r = await fetch(
     `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`
   );
@@ -37,7 +37,7 @@ export async function resolveTitle(query, TMDB_KEY) {
   return { id: hit.id, type: hit.media_type, label: `${hit.title || hit.name}${year ? ` (${year})` : ""}` };
 }
 
-export async function whereToStream({ title, countries, includeMode = "plus", TMDB_KEY }) {
+async function whereToStream({ title, countries, includeMode = "plus", TMDB_KEY }) {
   const t = await resolveTitle(title, TMDB_KEY);
   if (!t) return { info: null, entries: [] };
 
@@ -55,3 +55,6 @@ export async function whereToStream({ title, countries, includeMode = "plus", TM
   entries.sort((a, b) => a.provider.localeCompare(b.provider) || a.country.localeCompare(b.country));
   return { info: t, mode: includeMode === "strict" ? "streaming only" : "streaming + ad/free", entries };
 }
+
+// Export CommonJS interface
+module.exports = { pickStreaming, resolveTitle, whereToStream };
