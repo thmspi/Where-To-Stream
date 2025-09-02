@@ -1,4 +1,5 @@
-import { whereToStream } from "./core.js";
+import pkg from "./core.js";
+const { whereToStream } = pkg;
 // Node 18 runtime provides global fetch
 
 export async function handler(event) {
