@@ -1,6 +1,7 @@
+// Node 18 runtime provides global fetch
+
 import pkg from "./core.js";
 const { whereToStream } = pkg;
-// Node 18 runtime provides global fetch
 
 export async function handler(event) {
   // Log incoming event for troubleshooting

@@ -1,0 +1,139 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "S3BucketLevel",
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetBucket*",
+				"s3:PutBucket*",
+				"s3:DeleteBucket*",
+				"s3:ListBucket",
+				"s3:CreateBucket",
+				"s3:GetAccelerateConfiguration",
+				"s3:PutAccelerateConfiguration",
+				"s3:GetLifecycleConfiguration",
+				"s3:GetReplicationConfiguration",
+				"s3:GetEncryptionConfiguration",
+				"s3:PutBucketPolicy"
+			],
+			"Resource": "arn:aws:s3:::who-streams-it-*"
+		},
+		{
+			"Sid": "S3ObjectLevel",
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetObject",
+				"s3:PutObject",
+        "s3:GetObjectTagging",
+				"s3:DeleteObject"
+			],
+			"Resource": "arn:aws:s3:::who-streams-it-*/*"
+		},
+		{
+			"Sid": "LambdaCRUDScoped",
+			"Effect": "Allow",
+			"Action": [
+				"lambda:CreateFunction",
+				"lambda:UpdateFunctionCode",
+				"lambda:UpdateFunctionConfiguration",
+				"lambda:DeleteFunction",
+				"lambda:GetFunction",
+				"lambda:GetFunctionUrlConfig",
+				"lambda:CreateFunctionUrlConfig",
+				"lambda:UpdateFunctionUrlConfig",
+				"lambda:DeleteFunctionUrlConfig",
+				"lambda:AddPermission",
+				"lambda:RemovePermission",
+				"lambda:GetPolicy"
+			],
+			"Resource": "arn:aws:lambda:*:*:function:who-streams-it-*"
+		},
+		{
+			"Sid": "LambdaReadListAny",
+			"Effect": "Allow",
+			"Action": [
+				"lambda:ListFunctions",
+				"lambda:ListVersionsByFunction",
+				"lambda:ListAliases",
+				"lambda:GetFunctionConfiguration",
+				"lambda:GetFunctionEventInvokeConfig",
+				"lambda:GetRuntimeManagementConfig",
+				"lambda:GetFunctionCodeSigningConfig",
+				"lambda:GetCodeSigningConfig"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "LambdaReadListScoped",
+			"Effect": "Allow",
+			"Action": [
+				"lambda:GetFunctionCodeSigningConfig"
+			],
+			"Resource": "arn:aws:lambda:*:*:function:who-streams-it-*"
+		},
+		{
+			"Sid": "IAMForLambda",
+			"Effect": "Allow",
+			"Action": [
+				"iam:CreateRole",
+				"iam:DeleteRole",
+				"iam:GetRole",
+				"iam:PassRole",
+				"iam:AttachRolePolicy",
+				"iam:DetachRolePolicy",
+				"iam:ListRolePolicies",
+				"iam:GetRolePolicy",
+				"iam:PutRolePolicy",
+				"iam:DeleteRolePolicy",
+				"iam:ListAttachedRolePolicies",
+				"iam:ListInstanceProfilesForRole"
+			],
+			"Resource": "arn:aws:iam::*:role/who-streams-it-*"
+		},
+		{
+			"Sid": "IAMForAWSAPIGateway",
+			"Effect": "Allow",
+			"Action": [
+				"apigateway:GET",
+				"apigateway:POST",
+				"apigateway:PUT",
+				"apigateway:PATCH",
+				"apigateway:DELETE"
+			],
+			"Resource": [
+				"arn:aws:apigateway:eu-west-3::/apis",
+				"arn:aws:apigateway:eu-west-3::/apis/*"
+			]
+		},
+		{
+			"Sid": "AllowSetRetentionForAllHTTPApiLogGroups",
+			"Effect": "Allow",
+			"Action": "logs:PutRetentionPolicy",
+			"Resource": "arn:aws:logs:eu-west-3:*:log-group:/aws/http-api/*"
+		},
+		{
+			"Sid": "CloudWatchLogs",
+			"Effect": "Allow",
+			"Action": [
+				"logs:CreateLogGroup",
+				"logs:CreateLogStream",
+				"logs:PutLogEvents",
+				"logs:DescribeLogGroups",
+				"logs:DescribeLogStreams",
+				"logs:DeleteLogGroup",
+				"logs:ListTagsForResource",
+				"logs:CreateLogDelivery",
+				"logs:PutResourcePolicy",
+				"logs:DeleteResourcePolicy",
+				"logs:DescribeResourcePolicies",
+				"logs:ListLogDeliveries",
+				"logs:DeleteLogDelivery",
+				"logs:PutRetentionPolicy",
+				"logs:GetLogDelivery",
+				"logs:UpdateLogDelivery"
+			],
+			"Resource": "*"
+		}
+	]
+}

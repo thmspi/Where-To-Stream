@@ -1,6 +1,5 @@
 // Node 18 runtime provides global fetch
 
-// Ne garder que le streaming (flatrate) ou inclure aussi ads/free
 function pickStreaming(region, mode = "plus") {
   if (!region) return [];
   const buckets = mode === "strict" ? ["flatrate"] : ["flatrate", "ads", "free"];

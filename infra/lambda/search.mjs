@@ -1,6 +1,5 @@
 // dev-server/index.mjs
 // Using built-in fetch in Node.js 18 runtime
-// no dotenv in Lambdas
 
 // Simple in-memory cache keyed by title to reduce TMDB rate-limit errors
 const cache = new Map();

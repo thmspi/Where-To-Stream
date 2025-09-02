@@ -282,8 +282,8 @@ resource "aws_apigatewayv2_stage" "default" {
     data_trace_enabled       = true
     detailed_metrics_enabled = true
     logging_level            = "INFO"
-    throttling_rate_limit    = 10000  # increase per-second rate limit
-    throttling_burst_limit   = 20000  # increase burst capacity
+    throttling_rate_limit    = 10000
+    throttling_burst_limit   = 20000
   }
   # Enable execution logging per route
   route_settings {
