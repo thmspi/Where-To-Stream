@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 // no dotenv in Lambdas
 
 export async function handler(event) {
+  console.log("Lambda search handler invoked with event:", JSON.stringify(event));
   const title = (event.queryStringParameters?.title || "").trim();
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
   if (!title) {

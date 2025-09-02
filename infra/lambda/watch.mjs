@@ -2,6 +2,7 @@ import { whereToStream } from "./core.js";
 
 export async function handler(event) {
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
+  console.log("Lambda watch handler invoked with event:", JSON.stringify(event));
   const qs = event.queryStringParameters || {};
   const title = (qs.title || "").trim();
   if (!title) {
