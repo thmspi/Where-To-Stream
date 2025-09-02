@@ -271,6 +271,19 @@ resource "aws_apigatewayv2_stage" "default" {
     detailed_metrics_enabled = true
     logging_level            = "INFO"
   }
+  # Enable execution logging per route
+  route_settings {
+    route_key                 = "GET /search"
+    data_trace_enabled        = true
+    detailed_metrics_enabled  = true
+    logging_level             = "INFO"
+  }
+  route_settings {
+    route_key                 = "GET /watch"
+    data_trace_enabled        = true
+    detailed_metrics_enabled  = true
+    logging_level             = "INFO"
+  }
 }
 
 // Permission for API Gateway to invoke the search lambda
