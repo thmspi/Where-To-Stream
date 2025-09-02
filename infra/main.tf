@@ -223,6 +223,11 @@ resource "aws_cloudwatch_log_group" "api_gw_access" {
   name              = "/aws/http-api/${aws_apigatewayv2_api.http.id}"
   retention_in_days = 14
 }
+// Create CloudWatch Log Group for API Gateway execution logs
+resource "aws_cloudwatch_log_group" "api_gw_execution" {
+  name              = "/aws/http-api/${aws_apigatewayv2_api.http.id}/$default"
+  retention_in_days = 14
+}
 
 resource "aws_apigatewayv2_integration" "search" {
   api_id           = aws_apigatewayv2_api.http.id
@@ -255,14 +260,17 @@ resource "aws_apigatewayv2_stage" "default" {
   auto_deploy = true
 
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gw_access.arn
+    destination_arn = aws_cloudwatch_log_group.api_gw_execution.arn
     format = jsonencode({
-      requestId      = "$context.requestId",
-      requestTime    = "$context.requestTime",
-      httpMethod     = "$context.httpMethod",
-      routeKey       = "$context.routeKey",
-      status         = "$context.status",
-      responseLength = "$context.responseLength"
+      requestId          = "$context.requestId",
+      requestTime        = "$context.requestTime",
+      httpMethod         = "$context.httpMethod",
+      routeKey           = "$context.routeKey",
+      status             = "$context.status",
+      integrationStatus  = "$context.integrationStatus",
+      integrationLatency = "$context.integrationLatency",
+      responseLatency    = "$context.responseLatency",
+      responseLength     = "$context.responseLength"
     })
   }
 
