@@ -258,6 +258,10 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
   auto_deploy = true
+  depends_on = [
+    aws_apigatewayv2_route.search,
+    aws_apigatewayv2_route.watch,
+  ]
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gw_execution.arn
