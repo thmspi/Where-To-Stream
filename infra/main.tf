@@ -134,15 +134,81 @@ resource "aws_s3_object" "index" {
 # Allow public reads (website hosting)
 resource "aws_s3_bucket_public_access_block" "site" {
   bucket                  = aws_s3_bucket.site.id
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_policy" "site" {
   bucket = aws_s3_bucket.site.id
-  policy = data.aws_iam_policy_document.public_read.json
+  policy = data.aws_iam_policy_document.s3_oai_access.json
+}
+// CloudFront Origin Access Identity for secure S3 access
+resource "aws_cloudfront_origin_access_identity" "site_oai" {
+  comment = "OAI for Who-Streams-It site"
+}
+// Policy granting CloudFront OAI access to S3 objects
+data "aws_iam_policy_document" "s3_oai_access" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.site.arn}/*"]
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.site_oai.iam_arn]
+    }
+  }
+}
+
+// CloudFront distribution in front of static site
+resource "aws_cloudfront_distribution" "site_cdn" {
+  origin {
+    domain_name = aws_s3_bucket.site.bucket_regional_domain_name
+    origin_id   = "S3-${aws_s3_bucket.site.id}"
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.site_oai.cloudfront_access_identity_path
+    }
+  }
+  enabled             = true
+  # Limit edge locations to lowest-cost regions (Europe & North America)
+  price_class         = "PriceClass_100"
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+  restrictions {
+    # Only allow viewers from France
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["FR"]
+    }
+  }
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+  custom_error_response {
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
 }
 
 # --- Lambda role ---

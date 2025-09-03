@@ -1,6 +1,6 @@
 # Output the website URL and function URL
 output "website_url" {
-  value = "http://${aws_s3_bucket_website_configuration.site.website_endpoint}"
+  value = "https://${aws_cloudfront_distribution.site_cdn.domain_name}"
 }
 
 output "function_url" {

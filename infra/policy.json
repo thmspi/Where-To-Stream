@@ -25,7 +25,7 @@
 			"Action": [
 				"s3:GetObject",
 				"s3:PutObject",
-        "s3:GetObjectTagging",
+				"s3:GetObjectTagging",
 				"s3:DeleteObject"
 			],
 			"Resource": "arn:aws:s3:::who-streams-it-*/*"
@@ -134,6 +134,36 @@
 				"logs:UpdateLogDelivery"
 			],
 			"Resource": "*"
+		},
+		{
+			"Sid": "CloudFrontDistributionManagement",
+			"Effect": "Allow",
+			"Action": [
+				"cloudfront:CreateDistribution",
+				"cloudfront:GetDistribution",
+				"cloudfront:UpdateDistribution",
+				"cloudfront:DeleteDistribution",
+				"cloudfront:ListDistributions"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "CloudFrontOriginAccessIdentity",
+			"Effect": "Allow",
+			"Action": [
+				"cloudfront:CreateCloudFrontOriginAccessIdentity",
+				"cloudfront:GetCloudFrontOriginAccessIdentity",
+				"cloudfront:UpdateCloudFrontOriginAccessIdentity",
+				"cloudfront:DeleteCloudFrontOriginAccessIdentity",
+				"cloudfront:ListCloudFrontOriginAccessIdentities",
+				"cloudfront:TagResource",
+				"cloudfront:GetCloudFrontOriginAccessIdentity",
+				"cloudfront:ListTagsForResource"
+			],
+			"Resource": [
+				"arn:aws:cloudfront::*:distribution/*",
+				"arn:aws:cloudfront::*:origin-access-identity/*"
+			]
 		}
 	]
 }
