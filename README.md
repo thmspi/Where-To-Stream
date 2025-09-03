@@ -78,6 +78,7 @@ Terraform needs permissions to create and manage the AWS resources defined in th
 This project provisions a **serverless** architecture that powers the application end-to-end:
 
 - **Amazon S3** — hosts the single-page application (SPA).
+- **AWS CloudFront** — serves as the public entry point for the SPA.
 - **Amazon API Gateway** — public entry point for API requests from the SPA.
 - **AWS Lambda** — stateless functions handling the business logic.
 - **Amazon CloudWatch Logs** — centralized logging for debugging and traceability.
@@ -86,11 +87,13 @@ This project provisions a **serverless** architecture that powers the applicatio
 
 **How it works**
 
-1. The SPA is served from S3.
-2. User actions call the API through API Gateway.
-3. API Gateway invokes Lambda functions.
-4. Lambdas process the request (e.g., query external services) and return results to the SPA.
-5. API activity is recorded in **CloudWatch Logs**.
+1. The SPA is stored in an S3 bucket, which is secured with an Origin Access Control (OAC) so that only CloudFront can serve its content.  
+2. CloudFront acts as the public entry point, delivering the SPA to users.  
+3. User interactions trigger API requests routed through API Gateway.  
+4. API Gateway invokes the appropriate Lambda functions.  
+5. Lambdas handle the request and return the response to the SPA.  
+6. API activity is logged in **CloudWatch Logs**.  
+
 
 ---
 
@@ -140,9 +143,7 @@ Because TMDB cannot filter providers in the query itself, `pickStreaming()` filt
 
 ## Possible Improvements
 
-- **Front the S3 website with CloudFront** using Origin Access Control (OAC); keep the S3 bucket private and serve via the CDN only. Add an ACM certificate and enforce HTTPS.
 - **Tighten IAM**: replace wildcard actions/resources with explicit ARNs; restrict each Lambda’s execution role to only required permissions.
-- **Secret management**: store `tmdb_key` in AWS Secrets Manager or SSM Parameter Store (with KMS), not in plaintext env vars.
-- **Security & resilience**: add AWS WAF on CloudFront/API Gateway; enable throttling/rate limits on API Gateway.
-- **Observability**: structured logs, CloudWatch metrics/alarms, and (optionally) AWS X-Ray tracing.
-- **Performance**: cache TMDB responses (e.g., API Gateway cache or DynamoDB/ElastiCache) to reduce latency and costs.
+- **Secret management**: store `tmdb_key` in AWS Secrets Manager or SSM Parameter Store (with KMS)
+- **Observability**: generate detailed logs of API actions to improve traceability and make debugging more convenient.
+
