@@ -142,11 +142,22 @@ resource "aws_s3_bucket_public_access_block" "site" {
 
 resource "aws_s3_bucket_policy" "site" {
   bucket = aws_s3_bucket.site.id
-  policy = data.aws_iam_policy_document.public_read.json
+  policy = data.aws_iam_policy_document.s3_oai_access.json
 }
 // CloudFront Origin Access Identity for secure S3 access
 resource "aws_cloudfront_origin_access_identity" "site_oai" {
   comment = "OAI for Who-Streams-It site"
+}
+// Policy granting CloudFront OAI access to S3 objects
+data "aws_iam_policy_document" "s3_oai_access" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.site.arn}/*"]
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.site_oai.iam_arn]
+    }
+  }
 }
 
 // CloudFront distribution in front of static site
@@ -169,6 +180,12 @@ resource "aws_cloudfront_distribution" "site_cdn" {
     target_origin_id       = "S3-${aws_s3_bucket.site.id}"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
   }
   restrictions {
     # Only allow viewers from France
