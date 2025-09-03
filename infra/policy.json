@@ -135,5 +135,30 @@
 			],
 			"Resource": "*"
 		}
+		,
+		{
+			"Sid": "CloudFrontDistributionManagement",
+			"Effect": "Allow",
+			"Action": [
+				"cloudfront:CreateDistribution",
+				"cloudfront:GetDistribution",
+				"cloudfront:UpdateDistribution",
+				"cloudfront:DeleteDistribution",
+				"cloudfront:ListDistributions"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "CloudFrontOriginAccessIdentity",
+			"Effect": "Allow",
+			"Action": [
+				"cloudfront:CreateCloudFrontOriginAccessIdentity",
+				"cloudfront:GetCloudFrontOriginAccessIdentity",
+				"cloudfront:UpdateCloudFrontOriginAccessIdentity",
+				"cloudfront:DeleteCloudFrontOriginAccessIdentity",
+				"cloudfront:ListCloudFrontOriginAccessIdentities"
+			],
+			"Resource": "*"
+		}
 	]
 }
