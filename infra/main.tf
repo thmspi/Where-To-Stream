@@ -162,7 +162,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 resource "aws_lambda_function" "watch" {
   function_name    = "${var.project}-watch"
   role             = aws_iam_role.lambda.arn
-  runtime          = "nodejs18.x"
+  runtime          = "nodejs22.x"
   handler          = "watch.handler"
   filename         = data.archive_file.lambda_watch_zip.output_path
   source_code_hash = data.archive_file.lambda_watch_zip.output_base64sha256
@@ -182,7 +182,7 @@ resource "aws_lambda_function" "watch" {
 resource "aws_lambda_function" "search" {
   function_name    = "${var.project}-search"
   role             = aws_iam_role.lambda.arn
-  runtime          = "nodejs18.x"
+  runtime          = "nodejs22.x"
   handler          = "search.handler"
   filename         = data.archive_file.lambda_search_zip.output_path
   source_code_hash = data.archive_file.lambda_search_zip.output_base64sha256
