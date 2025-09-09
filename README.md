@@ -14,7 +14,7 @@ To run this project, make sure you have:
 - A **TMDB API key** (`tmdb_key`).
 - Your desired **AWS region** (e.g., `eu-west-3`).
 
-> You can list these in your README using the table below and load real values from a `.env` or your CI/CD secrets manager.
+> You can load real values from a `.env` or your CI/CD secrets manager.
 
 ## Terraform Cloud / Remote Backend
 
